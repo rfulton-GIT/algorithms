@@ -1,16 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 int min(int a, int b){
 	return (a < b) ? a : b;
 }
-void swap(int* A, int i,int j){
-	int tmp = A[j];
-	A[j] = A[i];
-	A[i] = tmp;
-}
-
 void printArr(int *arr, int size){
 	for (int i = 0; i < size; ++i){
 		printf("%d ", arr[i]);
@@ -18,32 +11,36 @@ void printArr(int *arr, int size){
 	printf("\n");
 }
 
-int* bubble_sort(int *A, int size) {
-	int* inOrder = malloc(size*sizeof(int));
-	//Deepcopy
-	for (int i = 0; i < size; ++i){
-		inOrder[i] = A[i];
-	}
-	for (int i = 0; i < size; ++i){
-		for (int j = size-1; j > i; --j){
-			if (inOrder[j] < inOrder[j-1]){
-				swap(inOrder,j,j-1);
-			}
-		}
-	}
-	return inOrder;
+void swap(int* A, int i,int j){
+	int tmp = A[j];
+	A[j] = A[i];
+	A[i] = tmp;
 }
+
 
 /*
 sorts not in-place, in time O(nlgn)
 */
-int* merge_sort(int *A, int size) {
+int bubble_count(int *A, int size){
+	int count = 0;
+	for (int i = 0; i < size - 1; ++i){
+		for (int j = i + 1; j<size; ++j){
+			count += A[j] < A[i];
+		}
+	}
+	return count;
+}
+
+int merge_count(int *A, int size) {
 	int *B = malloc(size*sizeof(int));
 	int *C = malloc(size*sizeof(int));
+
 	int *tmp_p;
 	int p,q;
 	int insert;
-	//deepcopy array A
+	int count = 0;
+	int caboose;
+	// deepcopy the array
 	for (int i = 0; i < size; ++i){
 		C[i] = A[i];
 	}
@@ -59,6 +56,7 @@ int* merge_sort(int *A, int size) {
 			insert = start;
 			while (p < start+interval && q < min(start+2*interval, size)){
 				if (*(B+q) < *(B+p)) {
+					count += (start+interval) - p;
 					*(C+insert) = *(B+q);
 					++q;		
 				} else{
@@ -79,38 +77,30 @@ int* merge_sort(int *A, int size) {
 					++p;
 					++insert;
 				}
-			}	
+			}
+			
 		}
+		
+		
 		if (interval == size) {
 			break;
 		}
 	}
 	free(B);
-	return C;
+	free(C);
+	return count;
 }
 
-
 int main() {
-	int L = 100000;
-	int A[100000];
-	long int t1, t2, t3;
+	int L = 10000;
+	int A[10000];
+	int cbbl, cmerge;
 	for (int i = 0; i < L; ++i){
 		A[i] = rand() % L;
 	}
-	time (&t1);
-	int *merge = merge_sort(A, L);
-	time (&t2);
-	int *bbl = bubble_sort(A,L);
-	time(&t3);
-	printf("merge sort took %ld s, bubble sort took %ld s.\n", t2 - t1, t3-t2);
-	int equality = 1;
-	for (int i = 0; i < L; ++i){
-		if (merge[i] != bbl[i]) {
-			equality = 0;
-			break;
-		}
-	}
-	printf("mergesort == bubblesort : %s\n", equality ? "true" : "false");
+	cbbl = bubble_count(A,L);
+	cmerge = merge_count(A,L);
+	printf("cbbl == cmerge: %s\n", cbbl == cmerge ? "true" : "false");
 	return 0;
 }
 
